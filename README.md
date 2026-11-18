@@ -1,51 +1,62 @@
-B2B Analytics Engine
-A secure, tenant-isolated backend API designed to handle merchant authentication, data validation, and core B2B analytics.
+# B2B Analytics Engine
 
-Instead of just building another CRUD app, I engineered this MVP to treat security and data integrity as first-class citizens from day one. It is built to withstand real-world edge cases—from strict Pydantic payload validation to handling cryptographic dependency alignments and environment-level secret management.
+A secure, tenant-isolated backend API built with FastAPI, PostgreSQL, SQLAlchemy, and JWT Authentication.
 
-Tech Stack
-Framework: FastAPI (Python)
+Most backend tutorials just build basic CRUD apps where all users dump data into the same bucket. I built this microservice to solve the catastrophic risk of data leakage in Business-to-Business (B2B) SaaS environments by enforcing strict, database-level tenant isolation. 
 
-Database: PostgreSQL & SQLAlchemy (ORM)
+Instead of a basic API, this engine acts as a secure multi-tenant vault—authenticating merchants, rejecting malformed payloads, and guaranteeing that a company can only ever query and ingest their own isolated data.
 
-Authentication: JWT (JSON Web Tokens) via python-jose
+## Why I Built This (The Core Features)
 
-Security: passlib with bcrypt (strictly calibrated for dependency stability)
+* **Tenant Isolation:** Engineered strict data silos at the database layer. Every database query is cryptographically bound to the authenticated merchant's unique ID, preventing cross-tenant data exposure.
+* **Production-Grade Auth:** Implemented full JWT login flows. Debugged and resolved underlying dependency clashes between `passlib` and modern `bcrypt` releases to ensure stable, enterprise-ready password hashing.
+* **Enterprise Architecture:** Structured as a modular REST API using **FastAPI**. It uses Pydantic for strict data validation at the routing layer and SQLAlchemy 2.0 to securely map operations to a persistent PostgreSQL database.
+* **Zero Trust Credentials:** Abstracted all environment variables, secret keys, and database URLs using `python-dotenv`, ensuring zero hardcoded credentials ever touch version control.
 
-Environment Management: python-dotenv
+## Tech Stack
 
-Core Features
-Isolated Tenant Architecture: Merchant data is securely siloed. Every analytical request and database query is bound to the authenticated merchant's specific ID.
+* **Backend:** FastAPI, Python 3.x
+* **Database & ORM:** PostgreSQL, SQLAlchemy 2.0
+* **Authentication & Security:** JSON Web Tokens (JWT) via `python-jose`, `passlib`, `bcrypt`
+* **Validation & Environment:** Pydantic, `python-dotenv`
 
-Production-Grade Auth: Complete JWT login flow with securely hashed passwords. Hardcoded credentials are strictly prohibited; all secrets are managed via isolated .env environments.
+## Architecture Breakdown
 
-Aggressive Data Validation: Pydantic acts as a strict bouncer at the routing layer, intercepting malformed payloads (like missing company_name fields) and returning explicit 422 errors before they can hit the database.
+I designed this project with scalability and clean code principles in mind. The logic is strictly separated:
 
-Local Setup & Quick Start
-1. Clone the repository
+* `main.py` - The FastAPI traffic controller and API routing logic.
+* `auth.py` - Cryptographic hashing, password verification, and JWT token generation.
+* `schemas.py` - Pydantic models acting as the strict data bouncer for incoming API requests.
+* `models.py` & `database.py` - SQLAlchemy database mapping and secure session management.
 
+## How to Run It Locally
 
-git clone https://github.com/YOUR_USERNAME/b2b-analytics-engine.git
+**1. Clone the repository**
+
+git clone [https://github.com/YOUR_USERNAME/b2b-analytics-engine.git](https://github.com/YOUR_USERNAME/b2b-analytics-engine.git) 
 cd b2b-analytics-engine
-2. Set up the virtual environment & install dependencies
 
+**2. Set up the virtual environment & install dependencies**
 
 python -m venv env
-source env/Scripts/activate  # Windows
+source env/Scripts/activate  # On Windows use: env\Scripts\activate
 pip install fastapi[all] sqlalchemy psycopg2-binary python-jose[cryptography] passlib bcrypt==3.2.2 python-dotenv
-(Note: bcrypt is explicitly pinned to v3.2.2 to ensure passlib compatibility).
+*(Note: bcrypt is explicitly pinned to v3.2.2 to ensure passlib compatibility).*
 
-3. Configure Environment Variables
-Create a .env file in the root directory (this file is git-ignored for security). Add your local PostgreSQL credentials and a secure secret key:
+**3. Configure Environment Variables** 
+Create a `.env` file in the root directory and add your local PostgreSQL credentials and a secure secret key:
 
-Code snippet
 DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/b2b_ecommerce
 SECRET_KEY=generate_a_random_secure_string_here
-4. Run the Server
 
+
+**4. Start the FastAPI Backend**
 
 uvicorn app.main:app --reload
-The API will be live at [http://127.0.0.1:8000](http://127.0.0.1:8000). You can access the interactive Swagger documentation by navigating to [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
+*The API will be live at http://127.0.0.1:8000. You can view the interactive Swagger UI docs at http://127.0.0.1:8000/docs.*
 
-What's Next
-This MVP sets the foundation. The immediate next phases include building out the raw data ingestion pipelines for the sales_records tables, writing a Pytest suite for automated endpoint verification, and containerizing the application with Docker Compose for seamless cloud deployment.
+## Next Steps & Roadmap
+
+* Building out the raw data ingestion pipelines for the `sales_records` tables.
+* Writing a comprehensive `pytest` suite for automated endpoint verification.
+* Containerizing the application using Docker Compose for seamless cloud deployment.
